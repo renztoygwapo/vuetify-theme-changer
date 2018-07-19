@@ -1,9 +1,11 @@
 <template>
   <v-layout>
     <v-flex xs12 sm12 md12 lg12 class="ml-3 mr-3 mb-3">
-      <v-card>
-        <v-toolbar color="primary">
-          <v-toolbar-title class="white-text">Other Settings</v-toolbar-title>
+      <v-card :flat="isFlat">
+        <v-toolbar color="primary" :flat="isFlat">
+          <v-toolbar-title class="white-text">
+            {{ componentTitle }}
+          </v-toolbar-title>
           <v-spacer></v-spacer>
         </v-toolbar>
         <v-card-text>
@@ -13,12 +15,18 @@
                 Theme
               </v-subheader>
               <v-switch
-                :label="switch1 ? 'Light' : 'Dark'" v-model="switch1">
+                :label="isDark ? 'Light' : 'Dark'" v-model="isDark">
+              </v-switch>
+              <v-subheader>
+                Flat
+              </v-subheader>
+               <v-switch
+                :label="isFlat ? 'Flat' : 'Not Flat'" v-model="isFlat">
               </v-switch>
             </v-flex>
             <v-flex xs12 md3>
               <v-subheader>
-                Theming
+                Colors
               </v-subheader>
               <v-radio-group v-model="userTheme">
                 <v-radio
@@ -29,35 +37,71 @@
                 ></v-radio>
               </v-radio-group>
             </v-flex>
+            <v-flex xs12 md3>
+            </v-flex>
           </v-layout>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="primary" @click="saveChanges">Save Changes</v-btn>
+          <v-btn
+            :dark="!isDark"
+            :flat="isFlat"
+            color="primary"
+            :loading="loading"
+            :disabled="loading"
+            @click="saveChanges"
+          >Save Changes</v-btn>
         </v-card-actions>
       </v-card>
     </v-flex>
   </v-layout>
 </template>
 <script>
+
 module.exports = {
+  props: {
+    componentTitle: {
+      type: String,
+      default: 'Change Theme'
+    },
+    theme: {
+      type: Object
+    }
+  },
+  computed: {
+    loading () {
+      return this.$store.state.appUI.loading
+    }
+  },
+  created () {
+    this.isDark = !this.theme.isDark
+    this.isFlat = this.theme.isFlat
+    this.$vuetify.theme = this.theme.color
+    this.userTheme = this.theme.userTheme
+  },
   methods: {
     saveChanges () {
-      this.selectedConfigurations = {
-        color: this.color[this.userTheme]
+      const color = this.color[this.userTheme]
+      this.themeObj = {
+        isDark: !this.isDark,
+        isFlat: this.isFlat,
+        color: color,
+        userTheme: this.userTheme
       }
-      this.$emit('save', this.selectedConfigurations)
+      this.$emit('save', this.themeObj)
     }
   },
   data: function () {
     return {
-      selectedConfigurations: {},
-      switch1: true,
+      isFlat: false,
+      themeObj: {},
+      isDark: true,
       userTheme: 0,
       color: [
         {
           primary: '#f44336',
           secondary: '#F50057',
+          success: '#5cb85c',
           accent: '#008080',
           danger: '#d53182',
           error: '#b71c1c',
@@ -67,15 +111,17 @@ module.exports = {
         {
           primary: '#1c095E',
           secondary: '#914679',
-          accent: '#E8BAB5',
+          success: '#5cb85c',
+          accent: '#e23d80',
           danger: '#d53182',
           error: '#EF5B8C',
           info: '#1c89d5',
           clean: '#fff'
         },
-        { 
+        {
           primary: '#df691a',
           secondary: '#4e5d6c',
+          success: '#5cb85c',
           accent: '#5cb85c',
           danger: '#f0ad4e',
           error: '#d9534f',
@@ -85,6 +131,7 @@ module.exports = {
         {
           primary: '#1f9ed8',
           secondary: '#424242',
+          success: '#5cb85c',
           accent: '#75b500',
           danger: '#ff8800',
           error: '#d9534f',
@@ -101,11 +148,18 @@ module.exports = {
     }
   },
   watch: {
-    switch1 (val) {
+    isFlat (val) {
+      if (val) {
+        this.$emit('toFlat', true)
+      } else {
+        this.$emit('toFlat', false)
+      }
+    },
+    isDark (val) {
       if (val) {
         this.$emit('darkTheme', false)
       } else {
-        this.$emit('darkTheme', true)        
+        this.$emit('darkTheme', true)
       }
     },
     userTheme (val) {
@@ -114,5 +168,3 @@ module.exports = {
   }
 }
 </script>
-<style scoped>
-</style>
